@@ -1,6 +1,21 @@
-import { useState, useEffect } from 'react';
-import { clockIn, clockOut, getTodaySessions, getStreak, getLearningHistory } from '../services/api';
-import { Clock, Play, Square, Calendar, TrendingUp, MessageSquare, AlertTriangle, RefreshCw } from 'lucide-react';
+import { useState, useEffect } from "react";
+import {
+  clockIn,
+  clockOut,
+  getTodaySessions,
+  getStreak,
+  getLearningHistory,
+} from "../services/api";
+import {
+  Clock,
+  Play,
+  Square,
+  Calendar,
+  TrendingUp,
+  MessageSquare,
+  AlertTriangle,
+  RefreshCw,
+} from "lucide-react";
 
 export default function Learning() {
   const [sessions, setSessions] = useState([]);
@@ -8,7 +23,7 @@ export default function Learning() {
   const [streak, setStreak] = useState(0);
   const [history, setHistory] = useState([]);
   const [activeSession, setActiveSession] = useState(null);
-  const [reflection, setReflection] = useState('');
+  const [reflection, setReflection] = useState("");
   const [loading, setLoading] = useState(false);
   const [showClockOutModal, setShowClockOutModal] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
@@ -28,22 +43,28 @@ export default function Learning() {
         getStreak(),
         getLearningHistory({ limit: 7 }),
       ]);
-      
+      console.log("Today sessions response:", todayRes.data);
+      console.log("Streak response:", streakRes.data);
+      console.log("Learning history response:", historyRes.data);
+
       const todayData = todayRes.data;
       setTodayStats(todayData);
       setSessions(todayData.sessions || []);
-      
+
       const hasActive = todayData.has_active_session === true;
-      const activeSess = hasActive && todayData.sessions && todayData.sessions.length > 0
-        ? todayData.sessions.find(s => !s.end_time) 
-        : null;
-      
-      setActiveSession(activeSess || null);
+      const activeSess =
+        hasActive && todayData.sessions && todayData.sessions.length > 0
+          ? todayData.sessions.find((s) => !s.end_time)
+          : null;
+
+      setActiveSession(activeSess);
       setStreak(streakRes.data.current_streak || 0);
       setHistory(historyRes.data.history || []);
     } catch (error) {
-      console.error('Failed to fetch learning data:', error);
-      setError('Failed to load learning data. Please check your connection and try again.');
+      console.error("Failed to fetch learning data:", error);
+      setError(
+        "Failed to load learning data. Please check your connection and try again.",
+      );
     } finally {
       setFetchLoading(false);
     }
@@ -51,24 +72,27 @@ export default function Learning() {
 
   const handleClockIn = async () => {
     if (activeSession) {
-      alert('You already have an active session. Please clock out first.');
+      alert("You already have an active session. Please clock out first.");
       return;
     }
 
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await clockIn();
-      console.log('Clock-in response:', response.data);
-      
+      console.log("Clock-in response:", response.data);
+
       await fetchData();
-      alert('✅ Successfully clocked in! Your learning session has started.');
+      alert("✅ Successfully clocked in! Your learning session has started.");
     } catch (error) {
-      console.error('Clock-in error:', error);
-      const errorMsg = error.response?.data?.error || error.message || 'Failed to clock in. Please try again.';
+      console.error("Clock-in error:", error);
+      const errorMsg =
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to clock in. Please try again.";
       setError(errorMsg);
-      alert('❌ ' + errorMsg);
+      alert("❌ " + errorMsg);
     } finally {
       setLoading(false);
     }
@@ -76,7 +100,7 @@ export default function Learning() {
 
   const handleRequestClockOut = () => {
     if (!activeSession) {
-      alert('No active session found. Please clock in first.');
+      alert("No active session found. Please clock in first.");
       return;
     }
     setShowClockOutModal(true);
@@ -84,18 +108,18 @@ export default function Learning() {
 
   const handleCancelClockOut = () => {
     setShowClockOutModal(false);
-    setReflection('');
+    setReflection("");
     setError(null);
   };
 
   const handleConfirmClockOut = async () => {
     if (!reflection.trim()) {
-      setError('Reflection is required before clocking out.');
+      setError("Reflection is required before clocking out.");
       return;
     }
 
     if (!activeSession) {
-      alert('No active session found.');
+      alert("No active session found.");
       setShowClockOutModal(false);
       return;
     }
@@ -105,21 +129,24 @@ export default function Learning() {
 
     try {
       const response = await clockOut(reflection);
-      console.log('Clock-out response:', response.data);
-      
-      const hours = response.data.hours_completed || '0';
-      
-      setReflection('');
+      console.log("Clock-out response:", response.data);
+
+      const hours = response.data.hours_completed || "0";
+
+      setReflection("");
       setShowClockOutModal(false);
-      
+
       await fetchData();
-      
+
       alert(`✅ Successfully clocked out! You completed ${hours} hours today.`);
     } catch (error) {
-      console.error('Clock-out error:', error);
-      const errorMsg = error.response?.data?.error || error.message || 'Failed to clock out. Please try again.';
+      console.error("Clock-out error:", error);
+      const errorMsg =
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to clock out. Please try again.";
       setError(errorMsg);
-      alert('❌ ' + errorMsg);
+      alert("❌ " + errorMsg);
     } finally {
       setLoading(false);
     }
@@ -138,7 +165,10 @@ export default function Learning() {
 
   const requiredHours = 6;
   const currentHours = parseFloat(todayStats?.total_hours || 0);
-  const progressPercentage = Math.min((currentHours / requiredHours) * 100, 100);
+  const progressPercentage = Math.min(
+    (currentHours / requiredHours) * 100,
+    100,
+  );
 
   return (
     <div className="space-y-6">
@@ -146,7 +176,9 @@ export default function Learning() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Learning Tracker</h1>
-            <p className="mt-2 text-green-100">Track your daily 6-hour learning commitment</p>
+            <p className="mt-2 text-green-100">
+              Track your daily 6-hour learning commitment
+            </p>
           </div>
           <button
             onClick={fetchData}
@@ -194,7 +226,9 @@ export default function Learning() {
         <div className="bg-white rounded-xl shadow-md p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 font-medium">Current Streak</p>
+              <p className="text-sm text-gray-600 font-medium">
+                Current Streak
+              </p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 {streak}
                 <span className="text-lg text-gray-500 ml-1">days</span>
@@ -209,8 +243,12 @@ export default function Learning() {
         <div className="bg-white rounded-xl shadow-md p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 font-medium">Sessions Today</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{sessions.length}</p>
+              <p className="text-sm text-gray-600 font-medium">
+                Sessions Today
+              </p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">
+                {sessions.length}
+              </p>
             </div>
             <div className="bg-purple-500 p-3 rounded-lg">
               <Calendar className="h-6 w-6 text-white" />
@@ -221,14 +259,16 @@ export default function Learning() {
 
       <div className="bg-white rounded-xl shadow-md p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Clock In/Out</h2>
-        
+
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800">
-            <strong>Status:</strong> {activeSession ? '🟢 Session Active' : '🔴 No Active Session'}
+            <strong>Status:</strong>{" "}
+            {activeSession ? "🟢 Session Active" : "🔴 No Active Session"}
           </p>
           {activeSession && (
             <p className="text-sm text-blue-700 mt-1">
-              Started at: {new Date(activeSession.start_time).toLocaleTimeString()}
+              Started at:{" "}
+              {new Date(activeSession.start_time).toLocaleTimeString()}
             </p>
           )}
         </div>
@@ -241,9 +281,11 @@ export default function Learning() {
               className="w-full md:w-auto flex items-center justify-center px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-lg shadow-lg"
             >
               <Play className="h-6 w-6 mr-2" />
-              {loading ? 'Starting Session...' : 'Clock In'}
+              {loading ? "Starting Session..." : "Clock In"}
             </button>
-            <p className="text-sm text-gray-600">Click to start your learning session</p>
+            <p className="text-sm text-gray-600">
+              Click to start your learning session
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -251,9 +293,12 @@ export default function Learning() {
               <div className="flex items-center">
                 <div className="animate-pulse bg-green-500 h-4 w-4 rounded-full mr-4"></div>
                 <div>
-                  <p className="font-bold text-gray-900 text-lg">Session Active</p>
+                  <p className="font-bold text-gray-900 text-lg">
+                    Session Active
+                  </p>
                   <p className="text-sm text-gray-600">
-                    Started at {new Date(activeSession.start_time).toLocaleTimeString()}
+                    Started at{" "}
+                    {new Date(activeSession.start_time).toLocaleTimeString()}
                   </p>
                 </div>
               </div>
@@ -263,7 +308,7 @@ export default function Learning() {
                 className="flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
                 <Square className="h-5 w-5 mr-2" />
-                {loading ? 'Processing...' : 'Clock Out'}
+                {loading ? "Processing..." : "Clock Out"}
               </button>
             </div>
           </div>
@@ -275,28 +320,45 @@ export default function Learning() {
         {history.length > 0 ? (
           <div className="space-y-3">
             {history.map((day, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div
+                key={index}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
                 <div>
                   <p className="font-medium text-gray-900">
-                    {new Date(day.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                    {new Date(day.date).toLocaleDateString("en-US", {
+                      weekday: "long",
+                      month: "short",
+                      day: "numeric",
+                    })}
                   </p>
-                  <p className="text-sm text-gray-600">{day.session_count} sessions</p>
+                  <p className="text-sm text-gray-600">
+                    {day.session_count} sessions
+                  </p>
                 </div>
                 <div className="text-right">
-                  <p className={`text-lg font-bold ${day.meets_requirement ? 'text-green-600' : 'text-orange-600'}`}>
+                  <p
+                    className={`text-lg font-bold ${day.meets_requirement ? "text-green-600" : "text-orange-600"}`}
+                  >
                     {day.hours} hrs
                   </p>
                   {day.meets_requirement ? (
-                    <span className="text-xs text-green-600 font-medium">✓ Goal met</span>
+                    <span className="text-xs text-green-600 font-medium">
+                      ✓ Goal met
+                    </span>
                   ) : (
-                    <span className="text-xs text-orange-600 font-medium">Below goal</span>
+                    <span className="text-xs text-orange-600 font-medium">
+                      Below goal
+                    </span>
                   )}
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-500 py-8">No learning history yet. Start by clocking in!</p>
+          <p className="text-center text-gray-500 py-8">
+            No learning history yet. Start by clocking in!
+          </p>
         )}
       </div>
 
@@ -307,14 +369,17 @@ export default function Learning() {
               <div className="bg-yellow-100 p-3 rounded-full mr-4">
                 <AlertTriangle className="h-6 w-6 text-yellow-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">Confirm Clock Out</h3>
+              <h3 className="text-xl font-bold text-gray-900">
+                Confirm Clock Out
+              </h3>
             </div>
 
             <div className="mb-6">
               <p className="text-gray-700 mb-4">
-                Are you sure you want to clock out? Before you go, please share a brief reflection on your learning session.
+                Are you sure you want to clock out? Before you go, please share
+                a brief reflection on your learning session.
               </p>
-              
+
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <MessageSquare className="h-4 w-4 inline mr-1" />
                 Learning Reflection (Required)
@@ -329,11 +394,10 @@ export default function Learning() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 rows="5"
               />
-              {error && (
-                <p className="text-sm text-red-600 mt-2">{error}</p>
-              )}
+              {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
               <p className="text-xs text-gray-500 mt-2">
-                Your reflection helps you track progress and identify areas for improvement.
+                Your reflection helps you track progress and identify areas for
+                improvement.
               </p>
             </div>
 
@@ -343,7 +407,7 @@ export default function Learning() {
                 disabled={loading || !reflection.trim()}
                 className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
               >
-                {loading ? 'Clocking Out...' : 'Confirm Clock Out'}
+                {loading ? "Clocking Out..." : "Confirm Clock Out"}
               </button>
               <button
                 onClick={handleCancelClockOut}
